@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>TrustServices.AIS.Net.Client</PackageId>
+    <Authors>Swisscom Trust Services AG</Authors>
+    <Product>AIS .NET Client</Product>
+    <Company>Swisscom Trust Services AG</Company>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Copyright>2021</Copyright>
+    <PackageProjectUrl>https://github.com/SwisscomTrustServices/itext-dotnet-ais</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/SwisscomTrustServices/itext-dotnet-ais</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>Swisscom AIS</PackageTags>
+    <PackageReleaseNotes>Version 1</PackageReleaseNotes>
+    <Version>1.1.0</Version>
+    <Description>AIS .NET Client to help signing documents using the Swisscom Trust Services AIS API</Description>
+    <PackageIcon></PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Common.Logging" Version="3.4.1" />
+    <PackageReference Include="Common.Logging.Core" Version="3.4.1" />
+    <PackageReference Include="itext7" Version="7.1.14" />
+    <PackageReference Include="itext7.licensekey" Version="3.1.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.10" />
+  </ItemGroup>
+
+</Project>
