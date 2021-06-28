@@ -62,7 +62,7 @@ namespace Swisscom.AIS.Rest
 			{
 				logger.Error("SetConfiguration", ex);
 				throw ex;
-			}			
+			}
 		}
 
 		private HttpClient BuildHttpClient()
@@ -103,13 +103,19 @@ namespace Swisscom.AIS.Rest
 		{
 			logger.Debug($"{operationName}: Serializing type object {request.GetType().Name} to JSON - {trace.Id}");
 			var serializedRequest = SerializeRequest(request);
+
+			Console.WriteLine($"RequestAsync: payload={serializedRequest}");
+
 			var task = Task.Run(() => ExecuteRequest(serializedRequest, serviceUrl, operationName, trace));
 			task.Wait();
+
+			Console.WriteLine($"RequestAsync: Result={task.Result}");
+
 			return JsonConvert.DeserializeObject<AISSignResponse>(task.Result);
 		}
 		private string SerializeRequest<T>(T request)
 		{
-			return JsonConvert.SerializeObject(request, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+			return JsonConvert.SerializeObject(request, Formatting.Indented, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 		}
 
 		private async Task<string> ExecuteRequest(string payload, string url, string operationName, Trace trace)
