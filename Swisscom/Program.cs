@@ -106,15 +106,15 @@ namespace Swisscom
 					{
 						TransactionId = Guid.NewGuid().ToString(),
 						ClaimedIdentityName = "ais-90days-trial",
+						//ClaimedIdentityKey = "static-saphir4-ch",
 						ClaimedIdentityKey = "OnDemand-Advanced4",
-						//DistinguishedName = "cn=TEST User, givenname=Max, surname=Maximus, c=US, serialnumber=abcdefabcdefabcdefabcdefabcdef",
-						DistinguishedName = "C=CH,ST=Zurich,L=Zurich,O=Secure Link Services AG,OU=ARC,CN=arc.selise.biz,E=rezwan.rafiq@selise.ch",
+						DistinguishedName = "cn=TEST Max Muster, givenname=Max, surname=Muster, c=CH, serialnumber=RAS5b45b027c6d9370008072c48",
 						StepUpLanguage = "en",
 						StepUpMessage = "Please confirm the signing of the document",
-						StepUpMsisdn = "40740634075123",
+						StepUpMsisdn = "41790000200",
 						SignatureReason = "For testing purposes",
 						SignatureLocation = "Dhaka, BD",
-						SignatureContactInfo = "asadullah.rifat@selise.ch",
+						SignatureContactInfo = "rezwan.rafiq@selise.ch",
 						SignatureStandard = new SignatureStandard("PAdES-baseline"),
 						RevocationInformation = new RevocationInformation("PAdES-baseline"),
 						ConsentUrlCallback = new ConsentUrlCallback(),
@@ -135,6 +135,7 @@ namespace Swisscom
 						}
 					};
 
+					//SignatureResult signatureResult = aisClient.SignWithOnDemandCertificate(documents, userData);
 					SignatureResult signatureResult = aisClient.SignWithOnDemandCertificate(documents, userData);
 					Console.WriteLine($"Finished signing the document(s) with the status: {signatureResult}");
 

@@ -242,7 +242,8 @@ namespace Swisscom.AIS
                     return result.Value;
                 }
             }
-            throw new AisClientException($"Failure response received from the AIS service: {ResponseUtils.GetResponseResultSummary(response)} - {trace.Id}");
+            var responseSummary = ResponseUtils.GetResponseResultSummary(response);
+            throw new AisClientException($"Failure response received from the AIS service: {responseSummary} - {trace.Id}");
         }
 
         private SignatureResult? ExtractSignatureResultFromMinorCode(ResultMinorCode minorCode, Result responseResult)
