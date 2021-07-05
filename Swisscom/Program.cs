@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -12,52 +13,69 @@ namespace Swisscom
 	{
 		static void Main(string[] args)
 		{
-			Console.WriteLine("Testing Swisscom Sign!");
-
-			var workingDirectory = "d:/Work/Swisscom";
-			var certFilePath = $"{workingDirectory}/my-ais.crt";
-			var keyFilePath = $"{workingDirectory}/my-ais.key";
-
-			var inputPdfFileLoc = $"{workingDirectory}/VerifyID4Signing-en.pdf";
-			var outPutPdfFileLoc = $"{workingDirectory}/Signed-VerifyID4Signing-en.pdf";
-
-			FileInfo crtFile = new FileInfo(certFilePath);
-			FileInfo keyFile = new FileInfo(keyFilePath);
-
-			if (crtFile.Exists)
+			try
 			{
-				Console.WriteLine($"File found ={certFilePath}");
-			}
+				Console.WriteLine("Testing Swisscom Sign!");
 
-			if (keyFile.Exists)
+				var workingDirectory = "d:/Work/Swisscom";
+				var certFilePath = $"{workingDirectory}/my-ais.crt";
+				var keyFilePath = $"{workingDirectory}/my-ais.key";
+
+				var inputPdfFileLoc = $"{workingDirectory}/VerifyID4Signing-en.pdf";
+				var outPutPdfFileLoc = $"{workingDirectory}/Signed-VerifyID4Signing-en.pdf";
+
+				FileInfo crtFile = new FileInfo(certFilePath);
+				FileInfo keyFile = new FileInfo(keyFilePath);
+
+				if (crtFile.Exists)
+				{
+					Console.WriteLine($"File found ={certFilePath}");
+				}
+
+				if (keyFile.Exists)
+				{
+					Console.WriteLine($"File found ={keyFilePath}");
+				}
+
+				if (crtFile.Exists && keyFile.Exists)
+				{
+					Console.WriteLine($"Required auth files found. Proceeding to test.");
+
+					//setup our DI
+					var serviceProvider = new ServiceCollection()
+						.AddSingleton<ISwisscomAdapterService, SwisscomAdapterService>()
+						.BuildServiceProvider();
+
+					var concentUrlReceived = false;
+
+					//do the actual work here
+					var service = serviceProvider.GetService<ISwisscomAdapterService>();
+					var success = service.Sign(
+						crtFileLoc: certFilePath,
+						keyFileloc: keyFilePath,
+						inputPdfFileLoc: inputPdfFileLoc,
+						outputPdfFileName: outPutPdfFileLoc,
+						consentUrl: (url) =>
+						{
+							if (!concentUrlReceived)
+							{
+								concentUrlReceived = true;
+								Process.Start(new ProcessStartInfo
+								{
+									FileName = url,
+									UseShellExecute = true
+								});
+							}
+						});
+
+					Console.WriteLine($"Testing finished with Success={success}!");
+				}
+				Console.ReadLine();
+			}
+			catch (Exception ex)
 			{
-				Console.WriteLine($"File found ={keyFilePath}");
+				throw ex;
 			}
-
-			if (crtFile.Exists && keyFile.Exists)
-			{
-				Console.WriteLine($"Required auth files found. Proceeding to test.");
-
-				//setup our DI
-				var serviceProvider = new ServiceCollection()
-					.AddSingleton<ISwisscomAdapterService, SwisscomAdapterService>()
-					.BuildServiceProvider();
-
-				//do the actual work here
-				var service = serviceProvider.GetService<ISwisscomAdapterService>();
-				var success = service.Sign(
-					crtFileLoc: certFilePath,
-					keyFileloc: keyFilePath,
-					inputPdfFileLoc: inputPdfFileLoc,
-					outputPdfFileName: outPutPdfFileLoc,
-					consentUrl: (url) =>
-					{
-						Console.WriteLine(url);
-					});
-
-				Console.WriteLine($"Testing finished with Success={success}!"); 
-			}
-			Console.ReadLine();
 		}
 
 		public interface ISwisscomAdapterService
@@ -106,15 +124,21 @@ namespace Swisscom
 					{
 						TransactionId = Guid.NewGuid().ToString(),
 						ClaimedIdentityName = "ais-90days-trial",
+
+						ClaimedIdentityKey = "OnDemand-Advanced",
 						//ClaimedIdentityKey = "static-saphir4-ch",
-						ClaimedIdentityKey = "OnDemand-Advanced4",
+
 						DistinguishedName = "cn=TEST Max Muster, givenname=Max, surname=Muster, c=CH, serialnumber=RAS5b45b027c6d9370008072c48",
+
+						StepUpMsisdn = "41790000200",
 						StepUpLanguage = "en",
 						StepUpMessage = "Please confirm the signing of the document",
-						StepUpMsisdn = "41790000200",
+						StepUpSerialNumber = "RAS5b45b027c6d9370008072c48",
+
 						SignatureReason = "For testing purposes",
 						SignatureLocation = "Dhaka, BD",
 						SignatureContactInfo = "rezwan.rafiq@selise.ch",
+
 						SignatureStandard = new SignatureStandard("PAdES-baseline"),
 						RevocationInformation = new RevocationInformation("PAdES-baseline"),
 						ConsentUrlCallback = new ConsentUrlCallback(),
@@ -135,8 +159,8 @@ namespace Swisscom
 						}
 					};
 
+					SignatureResult signatureResult = aisClient.SignWithOnDemandCertificateAndStepUp(documents, userData);
 					//SignatureResult signatureResult = aisClient.SignWithOnDemandCertificate(documents, userData);
-					SignatureResult signatureResult = aisClient.SignWithOnDemandCertificate(documents, userData);
 					Console.WriteLine($"Finished signing the document(s) with the status: {signatureResult}");
 
 					return signatureResult == SignatureResult.Success;
