@@ -116,7 +116,8 @@ namespace Swisscom
 				try
 				{
 					string stepUpSerialNumber = "RAS5b45b027c6d9370008072c48";
-					string msisdn = "0792615748";
+					//string msisdn = "+41792615748"; // julian vai
+					string msisdn = "+41432152563"; // rezwan vai
 
 					httpService = serviceProvider.GetService<IHttpService>();
 
@@ -154,8 +155,8 @@ namespace Swisscom
 
 					ConfigurationProperties properties = new ConfigurationProperties
 					{
-						ClientPollRounds = "10",
-						ClientPollIntervalInSeconds = "10",
+						ClientPollRounds = "20",
+						ClientPollIntervalInSeconds = "15",
 						//ITextLicenseFilePath = "your-license-file",
 						ServerRestSignUrl = "https://ais.swisscom.com/AIS-Server/rs/v1.0/sign",
 						ServerRestPendingUrl = "https://ais.swisscom.com/AIS-Server/rs/v1.0/pending",

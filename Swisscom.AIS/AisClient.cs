@@ -180,7 +180,7 @@ namespace Swisscom.AIS
 
 				for (int round = 0; round < aisClientConfiguration.SignaturePollingRounds; round++)
 				{
-					logger.Debug($"Polling for signature status, round {round + 1}/{aisClientConfiguration.SignaturePollingRounds} - {trace.Id}");
+					logger.Info($"Polling for signature status, round {round + 1}/{aisClientConfiguration.SignaturePollingRounds} - {trace.Id}");
 					AISPendingRequest pendingRequest = RequestBuilder.BuildAisPendingRequest(ResponseUtils.GetAsyncResponseId(localResponse), userData);
 					localResponse = restClient.PollForSignatureStatus(pendingRequest, trace);
 					ProcessConsentUrl(localResponse, userData, trace);
