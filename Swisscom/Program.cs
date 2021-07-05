@@ -73,11 +73,14 @@ namespace Swisscom
 							if (!concentUrlReceived)
 							{
 								concentUrlReceived = true;
-								Process.Start(new ProcessStartInfo
-								{
-									FileName = url,
-									UseShellExecute = true
-								});
+
+								Console.WriteLine(url);
+
+								//Process.Start(new ProcessStartInfo
+								//{
+								//	FileName = url,
+								//	UseShellExecute = true
+								//});
 							}
 						}).Result;
 
