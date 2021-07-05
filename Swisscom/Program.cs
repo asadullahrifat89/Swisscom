@@ -2,8 +2,12 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Selise.Arc.Core;
 using Swisscom.AIS;
 using Swisscom.AIS.Rest;
 
@@ -11,6 +15,10 @@ namespace Swisscom
 {
 	public class Program
 	{
+		private static ISwisscomAdapterService swisscomAdapterService;
+		private static IHttpService httpService;
+		private static ServiceProvider serviceProvider;
+
 		static void Main(string[] args)
 		{
 			try
@@ -42,15 +50,20 @@ namespace Swisscom
 					Console.WriteLine($"Required auth files found. Proceeding to test.");
 
 					//setup our DI
-					var serviceProvider = new ServiceCollection()
-						.AddSingleton<ISwisscomAdapterService, SwisscomAdapterService>()
-						.BuildServiceProvider();
+					var serviceCollection = new ServiceCollection()
+						.AddSingleton<ISwisscomAdapterService, SwisscomAdapterService>();
+
+					serviceCollection.AddHttpService();
+
+					serviceProvider = serviceCollection.BuildServiceProvider();
 
 					var concentUrlReceived = false;
 
+
+					swisscomAdapterService = serviceProvider.GetService<ISwisscomAdapterService>();
+
 					//do the actual work here
-					var service = serviceProvider.GetService<ISwisscomAdapterService>();
-					var success = service.Sign(
+					var success = swisscomAdapterService.SignAsync(
 						crtFileLoc: certFilePath,
 						keyFileloc: keyFilePath,
 						inputPdfFileLoc: inputPdfFileLoc,
@@ -66,7 +79,7 @@ namespace Swisscom
 									UseShellExecute = true
 								});
 							}
-						});
+						}).Result;
 
 					Console.WriteLine($"Testing finished with Success={success}!");
 				}
@@ -80,7 +93,7 @@ namespace Swisscom
 
 		public interface ISwisscomAdapterService
 		{
-			public bool Sign(
+			public Task<bool> SignAsync(
 					string crtFileLoc,
 					string keyFileloc,
 					string inputPdfFileLoc,
@@ -90,7 +103,7 @@ namespace Swisscom
 
 		public class SwisscomAdapterService : ISwisscomAdapterService
 		{
-			public bool Sign(
+			public async Task<bool> SignAsync(
 				string crtFileLoc,
 				string keyFileloc,
 				string inputPdfFileLoc,
@@ -99,6 +112,43 @@ namespace Swisscom
 			{
 				try
 				{
+					string stepUpSerialNumber = "RAS5b45b027c6d9370008072c48";
+					string msisdn = "0792615748";
+
+					httpService = serviceProvider.GetService<IHttpService>();
+
+					//TODO: get EvidenceId
+
+					var payload = new
+					{
+						claimedIdentity = "ais-90days-trial",
+						distinguishedName = "gn=heinrich,sn=mustermann,cn =TEST heini mustermann,c = CH",
+						msisdn = msisdn,
+						assuranceLevel = "3"
+					};
+
+					var url = "https://ras.scapp.swisscom.com/api/evidences/verify";
+					Console.WriteLine($"Calling ... {url}");
+					HttpRequestMessage httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, url)
+					{
+						Content = new StringContent(content: System.Text.Json.JsonSerializer.Serialize(payload), encoding: Encoding.UTF8, mediaType: "application/vnd.sc.ras.evidence.v1+json")
+					};
+
+					HttpResponseMessage response = await httpService.SendAsync(httpRequestMessage);
+
+					var content = response.Content.ReadAsStringAsync();
+
+					if (response.IsSuccessStatusCode)
+					{
+						//TODO: set stepUpSerialNumber
+					}
+					else
+					{
+						Console.WriteLine(content);
+					}
+
+					Console.WriteLine($"Calling ... https://ais.swisscom.com/AIS-Server/rs/v1.0/sign");
+
 					ConfigurationProperties properties = new ConfigurationProperties
 					{
 						ClientPollRounds = "10",
@@ -114,7 +164,6 @@ namespace Swisscom
 						ClientHttpRequestTimeoutInSeconds = "10",
 					};
 
-
 					RestClientConfiguration restClientConfiguration = new RestClientConfiguration(properties);
 					IRestClient restClient = new RestClient(restClientConfiguration);
 					AisClientConfiguration aisClientConfiguration = new AisClientConfiguration(properties);
@@ -128,12 +177,12 @@ namespace Swisscom
 						ClaimedIdentityKey = "OnDemand-Advanced",
 						//ClaimedIdentityKey = "static-saphir4-ch",
 
-						DistinguishedName = "cn=TEST Max Muster, givenname=Max, surname=Muster, c=CH, serialnumber=RAS5b45b027c6d9370008072c48",
+						DistinguishedName = $"cn=TEST Max Muster, givenname=Max, surname=Muster, c=CH, serialnumber={stepUpSerialNumber}",
 
-						StepUpMsisdn = "41790000200",
+						StepUpMsisdn = msisdn,
 						StepUpLanguage = "en",
 						StepUpMessage = "Please confirm the signing of the document",
-						StepUpSerialNumber = "RAS5b45b027c6d9370008072c48",
+						StepUpSerialNumber = stepUpSerialNumber,
 
 						SignatureReason = "For testing purposes",
 						SignatureLocation = "Dhaka, BD",
@@ -160,7 +209,9 @@ namespace Swisscom
 					};
 
 					SignatureResult signatureResult = aisClient.SignWithOnDemandCertificateAndStepUp(documents, userData);
-					//SignatureResult signatureResult = aisClient.SignWithOnDemandCertificate(documents, userData);
+
+					//SignatureResult signatureResult = aisClient.SignWithStaticCertificate(documents, userData);
+
 					Console.WriteLine($"Finished signing the document(s) with the status: {signatureResult}");
 
 					return signatureResult == SignatureResult.Success;
