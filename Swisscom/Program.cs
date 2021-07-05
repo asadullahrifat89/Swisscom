@@ -116,8 +116,9 @@ namespace Swisscom
 				try
 				{
 					string stepUpSerialNumber = "RAS5b45b027c6d9370008072c48";
-					//string msisdn = "+41792615748"; // julian vai
-					string msisdn = "+41432152563"; // rezwan vai
+					//string msisdn = "+8801841800532"; // me
+					string msisdn = "+41792615748"; // julian
+					//string msisdn = "+41432152563"; // rezwan
 
 					httpService = serviceProvider.GetService<IHttpService>();
 
@@ -125,7 +126,7 @@ namespace Swisscom
 
 					var payload = new
 					{
-						claimedIdentity = "ais-90days-trial",
+						claimedIdentity = "ais-90days-trial-OTP",
 						distinguishedName = "gn=Max,sn=Muster,cn =TEST Max Muster,c = CH",
 						msisdn = msisdn,
 						assuranceLevel = "3"
@@ -155,8 +156,8 @@ namespace Swisscom
 
 					ConfigurationProperties properties = new ConfigurationProperties
 					{
-						ClientPollRounds = "20",
-						ClientPollIntervalInSeconds = "15",
+						ClientPollRounds = "25",
+						ClientPollIntervalInSeconds = "20",
 						//ITextLicenseFilePath = "your-license-file",
 						ServerRestSignUrl = "https://ais.swisscom.com/AIS-Server/rs/v1.0/sign",
 						ServerRestPendingUrl = "https://ais.swisscom.com/AIS-Server/rs/v1.0/pending",
@@ -176,9 +177,9 @@ namespace Swisscom
 					UserData userData = new UserData
 					{
 						TransactionId = Guid.NewGuid().ToString(),
-						ClaimedIdentityName = "ais-90days-trial",
+						ClaimedIdentityName = "ais-90days-trial-OTP",
 
-						ClaimedIdentityKey = "OnDemand-Advanced",
+						ClaimedIdentityKey = "OnDemand-Advanced4",
 						//ClaimedIdentityKey = "static-saphir4-ch",
 
 						DistinguishedName = $"cn=TEST Max Muster, givenname=Max, surname=Muster, c=CH, serialnumber={stepUpSerialNumber}",
