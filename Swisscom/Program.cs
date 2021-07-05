@@ -126,7 +126,7 @@ namespace Swisscom
 					var payload = new
 					{
 						claimedIdentity = "ais-90days-trial",
-						distinguishedName = "gn=heinrich,sn=mustermann,cn =TEST heini mustermann,c = CH",
+						distinguishedName = "gn=Max,sn=Muster,cn =TEST Max Muster,c = CH",
 						msisdn = msisdn,
 						assuranceLevel = "3"
 					};
