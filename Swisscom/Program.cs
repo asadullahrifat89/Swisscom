@@ -228,9 +228,9 @@ namespace Swisscom
 						}
 					};
 
-					//SignatureResult signatureResult = aisClient.SignWithStaticCertificate(documents, userData);
-					//SignatureResult signatureResult = aisClient.SignWithOnDemandCertificate(documents, userData);
-					SignatureResult signatureResult = aisClient.SignWithOnDemandCertificateAndStepUp(documents, userData);
+					//SignatureResult signatureResult = aisClient.SignWithStaticCertificate(documents, userData); // works
+					//SignatureResult signatureResult = aisClient.SignWithOnDemandCertificate(documents, userData); // doesn't work as it required MSISDN element to be present in DN
+					SignatureResult signatureResult = aisClient.SignWithOnDemandCertificateAndStepUp(documents, userData); // works but requires a valid mobile number registered with swisscom: https://www.mobileid.ch/en/login?origin=first-activation
 
 					Console.WriteLine($"Finished signing the document(s) with the status: {signatureResult}");
 					return signatureResult == SignatureResult.Success;
