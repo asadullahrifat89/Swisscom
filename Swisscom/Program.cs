@@ -190,9 +190,7 @@ namespace Swisscom
 					UserData userData = new UserData
 					{
 						TransactionId = Guid.NewGuid().ToString(),
-
 						ClaimedIdentityName = claimedIdentityName,
-
 						ClaimedIdentityKey = claimedIdentityKey,
 
 						DistinguishedName = $"cn=TEST Max Muster, givenname=Max, surname=Muster, c=CH, serialnumber={verifyResponse.evidenceId}",
