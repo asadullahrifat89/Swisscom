@@ -118,18 +118,20 @@ namespace Swisscom
 					string stepUpSerialNumber = "RAS5b45b027c6d9370008072c48";
 					//string msisdn = "+8801841800532"; // me
 					string msisdn = "+41792615748"; // julian
-					//string msisdn = "+41432152563"; // rezwan
+													//string msisdn = "+41432152563"; // rezwan
 
 					httpService = serviceProvider.GetService<IHttpService>();
 
+					#region VerifyId
 					//TODO: get EvidenceId
 
 					var payload = new
 					{
-						claimedIdentity = "ais-90days-trial-OTP",
-						distinguishedName = "gn=Max,sn=Muster,cn =TEST Max Muster,c = CH",
+						claimedIdentity = "ais-90days-trial",
 						msisdn = msisdn,
-						assuranceLevel = "3"
+						distinguishedName = "gn=Max,sn=Muster,cn =TEST Max Muster,c = CH",
+						assuranceLevel = "4",
+						jurisdiction = "zertes"
 					};
 
 					var url = "https://ras.scapp.swisscom.com/api/evidences/verify";
@@ -151,6 +153,7 @@ namespace Swisscom
 					{
 						Console.WriteLine(content);
 					}
+					#endregion
 
 					Console.WriteLine($"Calling ... https://ais.swisscom.com/AIS-Server/rs/v1.0/sign");
 
@@ -177,12 +180,15 @@ namespace Swisscom
 					UserData userData = new UserData
 					{
 						TransactionId = Guid.NewGuid().ToString(),
-						ClaimedIdentityName = "ais-90days-trial-OTP",
 
-						ClaimedIdentityKey = "OnDemand-Advanced4",
+						ClaimedIdentityName = "ais-90days-trial",
+						//ClaimedIdentityName = "ais-90days-trial-OTP",
+
 						//ClaimedIdentityKey = "static-saphir4-ch",
+						ClaimedIdentityKey = "OnDemand-Advanced4",
 
 						DistinguishedName = $"cn=TEST Max Muster, givenname=Max, surname=Muster, c=CH, serialnumber={stepUpSerialNumber}",
+						//DistinguishedName = $"cn=TEST Max Muster, givenname=Max, surname=Muster, c=CH",
 
 						StepUpMsisdn = msisdn,
 						StepUpLanguage = "en",
@@ -200,6 +206,7 @@ namespace Swisscom
 					};
 					userData.ConsentUrlCallback.OnConsentUrlReceived += (sender, e) =>
 					{
+						var userData = e.UserData;
 						consentUrl?.Invoke(e.Url);
 					};
 
@@ -213,9 +220,10 @@ namespace Swisscom
 						}
 					};
 
-					SignatureResult signatureResult = aisClient.SignWithOnDemandCertificateAndStepUp(documents, userData);
 
 					//SignatureResult signatureResult = aisClient.SignWithStaticCertificate(documents, userData);
+					//SignatureResult signatureResult = aisClient.SignWithOnDemandCertificate(documents, userData);
+					SignatureResult signatureResult = aisClient.SignWithOnDemandCertificateAndStepUp(documents, userData);
 
 					Console.WriteLine($"Finished signing the document(s) with the status: {signatureResult}");
 
