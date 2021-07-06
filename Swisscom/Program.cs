@@ -25,12 +25,12 @@ namespace Swisscom
 			{
 				Console.WriteLine("Testing Swisscom Sign!");
 
-				var workingDirectory = "d:/Work/Swisscom";
-				var certFilePath = $"{workingDirectory}/my-ais.crt";
-				var keyFilePath = $"{workingDirectory}/my-ais.key";
+				string workingDirectory = "d:/Work/Swisscom";
+				string certFilePath = $"{workingDirectory}/my-ais.crt";
+				string keyFilePath = $"{workingDirectory}/my-ais.key";
 
-				var inputPdfFileLoc = $"{workingDirectory}/VerifyID4Signing-en.pdf";
-				var outPutPdfFileLoc = $"{workingDirectory}/Signed-VerifyID4Signing-en.pdf";
+				string inputPdfFileLoc = $"{workingDirectory}/VerifyID4Signing-en.pdf";
+				string outPutPdfFileLoc = $"{workingDirectory}/Signed-VerifyID4Signing-en.pdf";
 
 				FileInfo crtFile = new FileInfo(certFilePath);
 				FileInfo keyFile = new FileInfo(keyFilePath);
@@ -50,20 +50,20 @@ namespace Swisscom
 					Console.WriteLine($"Required auth files found. Proceeding to test.");
 
 					//setup our DI
-					var serviceCollection = new ServiceCollection()
+					IServiceCollection serviceCollection = new ServiceCollection()
 						.AddSingleton<ISwisscomAdapterService, SwisscomAdapterService>();
 
 					serviceCollection.AddHttpService();
 
 					serviceProvider = serviceCollection.BuildServiceProvider();
 
-					var concentUrlReceived = false;
+					bool concentUrlReceived = false;
 
 
 					swisscomAdapterService = serviceProvider.GetService<ISwisscomAdapterService>();
 
 					//do the actual work here
-					var success = swisscomAdapterService.SignAsync(
+					bool success = swisscomAdapterService.SignAsync(
 						crtFileLoc: certFilePath,
 						keyFileloc: keyFilePath,
 						inputPdfFileLoc: inputPdfFileLoc,
@@ -104,6 +104,11 @@ namespace Swisscom
 					Action<string> consentUrl);
 		}
 
+		public class VerifyResponse
+		{
+			public string evidenceId { get; set; }
+		}
+
 		public class SwisscomAdapterService : ISwisscomAdapterService
 		{
 			public async Task<bool> SignAsync(
@@ -115,15 +120,15 @@ namespace Swisscom
 			{
 				try
 				{
-					string stepUpSerialNumber = "RAS5b45b027c6d9370008072c48";
 					//string msisdn = "+8801841800532"; // me
-					string msisdn = "+41792615748"; // julian
-													//string msisdn = "+41432152563"; // rezwan
+					//string msisdn = "+41792615748"; // julian
+					string msisdn = "+41432152563"; // rezwan
 
 					httpService = serviceProvider.GetService<IHttpService>();
 
-					#region VerifyId
-					//TODO: get EvidenceId
+					VerifyResponse verifyResponse = new VerifyResponse();
+
+					#region Verify Mobile Number and Get Evidence Id				
 
 					var payload = new
 					{
@@ -134,7 +139,7 @@ namespace Swisscom
 						jurisdiction = "zertes"
 					};
 
-					var url = "https://ras.scapp.swisscom.com/api/evidences/verify";
+					string url = "https://ras.scapp.swisscom.com/api/evidences/verify";
 					Console.WriteLine($"Calling ... {url}");
 					HttpRequestMessage httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, url)
 					{
@@ -143,17 +148,20 @@ namespace Swisscom
 
 					HttpResponseMessage response = await httpService.SendAsync(httpRequestMessage);
 
-					var content = response.Content.ReadAsStringAsync();
+					string content = await response.Content.ReadAsStringAsync();
 
-					if (response.IsSuccessStatusCode)
+					if (response.IsSuccessStatusCode) // got serial number as evidenceId from swisscom
 					{
-						//TODO: set stepUpSerialNumber
+						verifyResponse = System.Text.Json.JsonSerializer.Deserialize<VerifyResponse>(content);
 					}
-					else
+					else // failed so just use mock data
 					{
+						verifyResponse.evidenceId = "RAS5b45b027c6d9370008072c48"; // demo data
 						Console.WriteLine(content);
 					}
 					#endregion
+
+					#region Sign Request
 
 					Console.WriteLine($"Calling ... https://ais.swisscom.com/AIS-Server/rs/v1.0/sign");
 
@@ -187,13 +195,13 @@ namespace Swisscom
 						//ClaimedIdentityKey = "static-saphir4-ch",
 						ClaimedIdentityKey = "OnDemand-Advanced4",
 
-						DistinguishedName = $"cn=TEST Max Muster, givenname=Max, surname=Muster, c=CH, serialnumber={stepUpSerialNumber}",
+						DistinguishedName = $"cn=TEST Max Muster, givenname=Max, surname=Muster, c=CH, serialnumber={verifyResponse.evidenceId}",
 						//DistinguishedName = $"cn=TEST Max Muster, givenname=Max, surname=Muster, c=CH",
 
 						StepUpMsisdn = msisdn,
 						StepUpLanguage = "en",
 						StepUpMessage = "Please confirm the signing of the document",
-						StepUpSerialNumber = stepUpSerialNumber,
+						StepUpSerialNumber = verifyResponse.evidenceId,
 
 						SignatureReason = "For testing purposes",
 						SignatureLocation = "Dhaka, BD",
@@ -206,7 +214,7 @@ namespace Swisscom
 					};
 					userData.ConsentUrlCallback.OnConsentUrlReceived += (sender, e) =>
 					{
-						var userData = e.UserData;
+						UserData userData = e.UserData;
 						consentUrl?.Invoke(e.Url);
 					};
 
@@ -220,14 +228,14 @@ namespace Swisscom
 						}
 					};
 
-
 					//SignatureResult signatureResult = aisClient.SignWithStaticCertificate(documents, userData);
 					//SignatureResult signatureResult = aisClient.SignWithOnDemandCertificate(documents, userData);
 					SignatureResult signatureResult = aisClient.SignWithOnDemandCertificateAndStepUp(documents, userData);
 
 					Console.WriteLine($"Finished signing the document(s) with the status: {signatureResult}");
-
 					return signatureResult == SignatureResult.Success;
+
+					#endregion
 				}
 				catch (Exception e)
 				{
