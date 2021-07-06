@@ -121,9 +121,11 @@ namespace Swisscom
 				try
 				{
 					//string msisdn = "+8801841800532"; // me
-					//string msisdn = "+41792615748"; // julian
-					string msisdn = "+41432152563"; // rezwan
+					string msisdn = "+41792615748"; // julian
+													//string msisdn = "+41432152563"; // rezwan
 
+					string claimedIdentityName = "ais-90days-trial-OTP";
+					string claimedIdentityKey = "OnDemand-Advanced4"; /*"static-saphir4-ch";*/
 					httpService = serviceProvider.GetService<IHttpService>();
 
 					VerifyResponse verifyResponse = new VerifyResponse();
@@ -132,7 +134,7 @@ namespace Swisscom
 
 					var payload = new
 					{
-						claimedIdentity = "ais-90days-trial",
+						claimedIdentity = claimedIdentityName,
 						msisdn = msisdn,
 						distinguishedName = "gn=Max,sn=Muster,cn =TEST Max Muster,c = CH",
 						assuranceLevel = "4",
@@ -167,9 +169,9 @@ namespace Swisscom
 
 					ConfigurationProperties properties = new ConfigurationProperties
 					{
-						ClientPollRounds = "25",
-						ClientPollIntervalInSeconds = "20",
 						//ITextLicenseFilePath = "your-license-file",
+						ClientPollRounds = "25",
+						ClientPollIntervalInSeconds = "20",						
 						ServerRestSignUrl = "https://ais.swisscom.com/AIS-Server/rs/v1.0/sign",
 						ServerRestPendingUrl = "https://ais.swisscom.com/AIS-Server/rs/v1.0/pending",
 						ClientAuthKeyFile = keyFileloc,
@@ -189,14 +191,11 @@ namespace Swisscom
 					{
 						TransactionId = Guid.NewGuid().ToString(),
 
-						ClaimedIdentityName = "ais-90days-trial",
-						//ClaimedIdentityName = "ais-90days-trial-OTP",
+						ClaimedIdentityName = claimedIdentityName,
 
-						//ClaimedIdentityKey = "static-saphir4-ch",
-						ClaimedIdentityKey = "OnDemand-Advanced4",
+						ClaimedIdentityKey = claimedIdentityKey,
 
 						DistinguishedName = $"cn=TEST Max Muster, givenname=Max, surname=Muster, c=CH, serialnumber={verifyResponse.evidenceId}",
-						//DistinguishedName = $"cn=TEST Max Muster, givenname=Max, surname=Muster, c=CH",
 
 						StepUpMsisdn = msisdn,
 						StepUpLanguage = "en",
